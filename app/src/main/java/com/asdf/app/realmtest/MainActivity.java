@@ -15,6 +15,9 @@ import com.asdf.app.realmtest.model.Exercise;
 import com.asdf.app.realmtest.model.WorkoutPlan;
 import com.asdf.app.realmtest.model.WorkoutSet;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -31,6 +34,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         realm = Realm.getInstance(this);
+        realm.beginTransaction();
+        realm.clear(Exercise.class);
+        realm.clear(WorkoutPlan.class);
+        realm.clear(WorkoutSet.class);
+        WorkoutPlan p = realm.copyToRealm(new WorkoutPlan("Log"));
+        realm.commitTransaction();
 
         mTextView = (TextView) findViewById(R.id.textview);
         mLoadButton = (Button) findViewById(R.id.load);
@@ -65,11 +74,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.load:
-                loadFromRealm();
+                //loadFromRealm();
+                loadPlans();
                 break;
             case R.id.fab:
                 logToRealm();
                 break;
+        }
+    }
+
+    private void loadPlans() {
+        RealmResults<WorkoutPlan> result = realm.where(WorkoutPlan.class).findAll();
+
+        if(result.size() != 0){
+            Toast.makeText(this, "" + result.size(), Toast.LENGTH_SHORT).show();
+            mTextView.setText("");
+            for (WorkoutPlan p : result) {
+                String message = "Name: " + p.getName() + "\n";
+                if(p.getExercises().size() != 0){
+                    for (Exercise exercise : p.getExercises()) {
+                        message += " Exercise name: " + exercise.getName() + "\n";
+                    }
+                }
+                mTextView.append(message);
+            }
+        }else{
+            Toast.makeText(this, "No results", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -78,10 +108,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(result.size() != 0){
             Toast.makeText(this, "" + result.size(), Toast.LENGTH_SHORT).show();
+            mTextView.setText("");
             for (Exercise e : result) {
                 String message = "Name: " + e.getName() + "\n" +
-                        "Group: " + e.getMuscleGroup() + "\n";
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                        "Group: " + e.getMuscleGroup()+ "\n" +
+                        ((e.getPlan() != null) ? "Plan: " + e.getPlan().getName()+ "\n" : "");
+                mTextView.append(message);
             }
         }else{
             Toast.makeText(this, "No results", Toast.LENGTH_SHORT).show();
@@ -92,22 +124,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Exercise e = realm.createObject(Exercise.class);
-                WorkoutPlan p = realm.createObject(WorkoutPlan.class);
-                WorkoutSet s = realm.createObject(WorkoutSet.class);
-                e.setName("Curls");
-                e.setMuscleGroup("Bicep");
-
-                p.setName("Daily Log");
+                WorkoutPlan p = realm.where(WorkoutPlan.class).findFirst();
                 p.setDescription("Logging daily workouts");
+
+                Exercise e = realm.copyToRealm(new Exercise("Curls", getTodaysDate()));
+                e.setMuscleGroup("Bicep");
+                e.setPlan(p);
                 p.getExercises().add(e);
 
+                WorkoutSet s = realm.copyToRealm(new WorkoutSet((long) 150, (long) 10));
                 s.setExercise(e);
-                s.setReps((long) 10);
-                s.setWeight((long) 150);
 
                 e.getSets().add(s);
             }
         });
+    }
+
+    private Date getTodaysDate() {
+        Calendar c = Calendar.getInstance();
+        return new Date(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
     }
 }

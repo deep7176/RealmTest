@@ -10,10 +10,17 @@ import io.realm.annotations.PrimaryKey;
  * for FitX
  */
 public class WorkoutPlan extends RealmObject {
-    @PrimaryKey private int id;
+    private int id;
     @Index private String name;
     private String description;
     private RealmList<Exercise> exercises;
+
+    public WorkoutPlan() {
+    }
+
+    public WorkoutPlan(String name){
+        this.name = name;
+    }
 
     public RealmList<Exercise> getExercises() {
         return exercises;

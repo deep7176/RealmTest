@@ -12,15 +12,20 @@ import io.realm.annotations.Required;
  * for FitX
  */
 public class Exercise extends RealmObject {
-    @PrimaryKey
     private int id;
-    @Required
-    private String name;
-    @Required
-    private Date date;
+    @Required private String name;
+    @Required private Date date;
     private String muscleGroup;
     private WorkoutPlan plan;
     private RealmList<WorkoutSet> sets;
+
+    public Exercise() {
+    }
+
+    public Exercise(String name, Date date){
+        this.name = name;
+        this.date = date;
+    }
 
     public WorkoutPlan getPlan() {
         return plan;

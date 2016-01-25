@@ -8,9 +8,18 @@ import io.realm.annotations.PrimaryKey;
  * for FitX
  */
 public class WorkoutSet extends RealmObject {
-    @PrimaryKey private int id;
+    private int id;
     private Exercise exercise;
     private long weight;
+    private long reps;
+
+    public WorkoutSet() {
+    }
+
+    public WorkoutSet(long weight, long reps){
+        this.weight = weight;
+        this.reps = reps;
+    }
 
     public int getId() {
         return id;
@@ -43,6 +52,4 @@ public class WorkoutSet extends RealmObject {
     public void setWeight(long weight) {
         this.weight = weight;
     }
-
-    private long reps;
 }
